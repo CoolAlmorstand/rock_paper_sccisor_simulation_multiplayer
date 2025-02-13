@@ -23,13 +23,12 @@ export class SocketManager{
     
     
     static initializeSocketManager(){
-        this.socket = io( { 
+        this.socket = io(`${window.location.origin}`, { 
             auth: { 
                 connectionType: "reconnection", 
                 playerId: sessionStorage.getItem("player-id"), 
                 gameId: sessionStorage.getItem("game-id")
-            },
-            transports: ["websocket"]
+            }
         })
         this.socket.on("send-game-engine-info", (playersInfo, entities)  => SocketManager.updateGameState(playersInfo, entities) )
         this.socket.on("send-winner", (winner) => SocketManager.showGameOverScreen(winner) )

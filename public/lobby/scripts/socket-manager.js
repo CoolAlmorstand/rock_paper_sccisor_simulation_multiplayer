@@ -9,7 +9,7 @@ export class SocketManager {
     
     static initializeSocketManager(){
         
-        this.socket = io( { auth: { connectionType: "initial", username: sessionStorage.getItem("username") } } )
+        this.socket = io(`${window.location.origin}`, { auth: { connectionType: "initial", username: sessionStorage.getItem("username") } } )
         
         this.socket.on("reconnect_attempt", () => SocketManager.reconnect)
         this.socket.on("starting-game", SocketManager.startGame)
