@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 15px;
+            font-family: Arial, sans-serif;
+            background-color: grey;
+            font-size: 0.9em;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background-color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+        }
+
+        .points-display {
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        .stats {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 0 15px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-evenly;
+            gap: 40px;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .stats-row:first-child {
+            border: 2px solid blue;
+        }
+
+        .stats-row:last-child {
+            border: 2px solid red;
+        }
+
+        .icon-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            white-space: nowrap;
+            font-size: 1em;
+        }
+
+        canvas {
+            width: 100%;
+            max-width: 1200px;
+            aspect-ratio: 2/3;
+            background-color: rgb(31, 31, 31);
+            display: block;
+            margin: 0 auto 20px;
+            border-radius: 6px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: nowrap;
+            padding: 0 10px;
+        }
+
+        .button-container {
+            height: 90px;
+            width: 90px;
+            background-color: rgb(31, 31, 31);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        button {
+            width: 75px;
+            height: 85px;
+            border: none;
+            border-radius: 10px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .button-label {
+            font-size: 13px;
+            color: white;
+            text-align: center;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+        .button-icon {
+            
+            width: 70%;
+            height: auto;
+            aspect-ratio: 1/1;
+            image-rendering: pixelated;
+            pointer-events: none;
+        }
+        
+        .game-over-screen{
+            inset: 0;
+            margin: auto;
+            position: absolute;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 50%;
+            height: 18%;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .game-over-screen > p{
+            margin-top: -2.5%;
+        }
+        
+        .main-menu-button {
+            width: 60%;
+            height: auto;
+            aspect-ratio: 2/1;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            display; block;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 8px;
+            }
+            
+            button {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .stats {
+                padding: 0 8px;
+            }
+            
+            .stats-row {
+                gap: 30px;
+            }
+            
+            .icon-item {
+                gap: 10px;
+                font-size: 0.9em;
+            }
+            
+            .button-label {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-row {
+                gap: 20px;
+            }
+            
+            .icon-item {
+                font-size: 0.85em;
+            }
+            
+            .buttons {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-over-screen" id="game-over-screen">
+        <p id="winner-text"> winner </p>
+        <button id="main-menu-button" class="main-menu-button"> Main Menu </button>
+    </div>
+    <div class="container">
+        <nav>
+            <div class="game-title">RPS Game</div>
+            <div class="points-display" id="points">Points: 0</div>
+        </nav>
+
+        <div class="stats">
+            <div class="stats-row">
+                <div class="icon-item" id="blue-paper-counter">📜<span>0</span></div>
+                <div class="icon-item" id="blue-rock-counter">🪨<span>0</span></div>
+                <div class="icon-item" id="blue-scissors-counter">✂️<span>0</span></div>
+            </div>
+            <div class="stats-row">
+                <div class="icon-item" id="red-paper-counter">📜<span>0</span></div>
+                <div class="icon-item" id="red-rock-counter">🪨<span>0</span></div>
+                <div class="icon-item" id="red-scissors-counter">✂️<span>0</span></div>
+            </div>
+        </div>
+
+        <canvas id="game-canvas"></canvas>
+
+        <div class="buttons">
+            <div class="button-container" id="add-paper">
+                <img class="button-icon" src="/game-page/images/blue-paper-texture.png">
+                <span class="button-label">Add Paper</span>
+            </div>
+            <div class="button-container" id="add-rock">
+                <img class="button-icon" src="/game-page/images/blue-rock-texture.png">
+                <span class="button-label">Add Rock</span>
+            </div>
+            <div class="button-container" id="add-scissors">
+                <img class="button-icon" src="/game-page/images/blue-scissors-texture.png">
+                <span class="button-label">Add Scissors</span>
+            </div>
+        </div>
+    </div>
+    <script src="/game-page/scripts/index.js" type="module" defer> </script>
+</body>
+</html>
